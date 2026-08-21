@@ -2,6 +2,8 @@ name: flutter_app_template
 description: Template for Flutter app
 version: 1.0.0+1
 publish_to: none
+workspace:
+  - packages/design_system
 
 environment:
   sdk: ^3.12.0
@@ -15,6 +17,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  design_system: ^0.1.0
 
 dev_dependencies:
   bloc_lint: ^0.4.1
