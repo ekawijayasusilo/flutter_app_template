@@ -10,3 +10,9 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+
+linter:
+  rules:
+    # Widgetbook is the reference surface for this package; it is consumed
+    # in-repo and never published, so pub-style API docs are not required.
+    public_member_api_docs: false

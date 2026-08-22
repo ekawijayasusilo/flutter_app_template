@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 import 'package:widgetbook_catalog/widgetbook/widgetbook.directories.g.dart';
 import 'package:widgetbook_catalog/widgetbook/widgets/widgets.dart';
-import 'package:design_system/design_system.dart';
 
 /// The Widgetbook catalog app.
 @widgetbook.App()

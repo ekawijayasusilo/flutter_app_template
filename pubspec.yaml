@@ -4,6 +4,7 @@ version: 1.0.0+1
 publish_to: none
 workspace:
   - packages/design_system
+  - packages/design_system/widgetbook
 
 environment:
   sdk: ^3.12.0
@@ -11,13 +12,13 @@ environment:
 
 dependencies:
   bloc: ^9.2.1
+  design_system: ^0.1.0
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
-  design_system: ^0.1.0
 
 dev_dependencies:
   bloc_lint: ^0.4.1

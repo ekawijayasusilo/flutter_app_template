@@ -2,16 +2,16 @@ name: widgetbook_catalog
 description: "Widgetbook catalog for Design System"
 publish_to: none
 version: 1.0.0+1
+resolution: workspace
 
 environment:
   sdk: ^3.12.0
   flutter: ^3.44.0
 
 dependencies:
+  design_system: ^0.1.0
   flutter:
     sdk: flutter
-  design_system:
-    path: ..
   widgetbook: ^3.25.0
   widgetbook_annotation: ^3.11.0
 

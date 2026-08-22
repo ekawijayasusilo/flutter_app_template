@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 import 'package:design_system/design_system.dart';
+import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
 /// Primary [AppButton] use case.
 @widgetbook.UseCase(name: 'primary', type: AppButton)
