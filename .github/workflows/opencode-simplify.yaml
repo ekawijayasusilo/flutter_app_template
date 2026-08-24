@@ -1,12 +1,46 @@
 name: opencode-simplify
 
+# TEMPORARILY DISABLED. Parked, not deleted -- this is expected to come back.
+#
+# The upstream reusable workflow fails before it can post a review:
+#
+#   Author identity unknown
+#   *** Please tell me who you are.
+#   fatal: empty ident name (for <runner@...>) not allowed
+#
+# opencode-simplify.reusable.yml applies its suggestions locally to produce the
+# diff it turns into review comments, but never configures git user.name /
+# user.email on the runner, so the commit it makes to compute that diff aborts.
+# Nothing in this repository can fix it; the fix belongs in shared_workflow.
+#
+# Disabled by trigger rather than by deleting the file or flipping the switch in
+# the Actions tab, so the reason travels with the repository and shows up in a
+# diff. A UI toggle is invisible to anyone reading the code, and this is a
+# template -- every repository scaffolded from it inherits whatever is here.
+#
+# TO RE-ENABLE once the upstream fix ships: delete `workflow_dispatch` below,
+# restore the trigger, and bump the pin to the release containing the fix.
+#
+#   on:
+#     pull_request:
+#       types: [opened, synchronize, reopened, ready_for_review]
+#
+#   jobs:
+#     simplify:
+#       if: github.event.pull_request.draft == false
+#
+# Note that `workflow_dispatch` alone cannot usefully run this workflow -- the
+# reusable workflow needs pull request context. It is here only so the file
+# remains valid and the workflow stays listed rather than vanishing.
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 
 jobs:
   simplify:
-    if: github.event.pull_request.draft == false
+    # The stub's `if: github.event.pull_request.draft == false` guard is removed
+    # while disabled: there is no pull request context under workflow_dispatch,
+    # so it would reference an event payload that cannot exist. Restore it with
+    # the trigger.
     uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-simplify.reusable.yml@v1.2.0
     secrets:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}

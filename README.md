@@ -124,8 +124,12 @@ Renovate runs daily, centrally, from `shared_workflow`. Nothing is scheduled her
 
 ### Advisory, never blocking
 
-`ocr-review` and `opencode-simplify` review pull requests and post comments. `opencode` responds to
-`/oc` or `/opencode` in a comment. All three are LLM-driven and must never be required checks.
+`ocr-review` reviews pull requests and posts comments. `opencode` responds to `/oc` or
+`/opencode` in a comment. Both are LLM-driven and must never be required checks.
+
+`opencode-simplify` is **temporarily disabled** — its trigger is reduced to `workflow_dispatch`.
+The upstream reusable workflow commits without configuring `git user.name` / `user.email` and
+aborts with `fatal: empty ident name`. The file documents how to re-enable it.
 
 `opencode` additionally requires the commenter to be the repository **owner or a collaborator**.
 Without that check any GitHub user could drive an agent holding `contents: write` and the API key,
