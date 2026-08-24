@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "dart-flutter@dart-flutter": true,
+    "firebase@firebase": true
+  }
+}
