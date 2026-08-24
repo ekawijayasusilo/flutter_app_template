@@ -1,0 +1,51 @@
+name: security-scheduled
+
+# Scheduled security sweeps. These are deliberately NOT part of ci.yaml's fan-in
+# gate -- they run against main on a timer, not against a pull request.
+#
+# Note: GitHub disables `schedule` triggers on repositories with 60 days of no
+# activity. On a template repository that sits idle, both sweeps below stop
+# silently until someone re-enables them.
+on:
+  schedule:
+    # Weekly, Monday 03:00 Asia/Jakarta. Catches advisories published after a
+    # dependency was already merged.
+    - cron: "0 20 * * 0"
+    # Monthly, 1st at 03:00 Asia/Jakarta. Re-scans immutable git history against
+    # updated detection rules -- that is the entire point of running it again.
+    - cron: "0 20 1 * *"
+  workflow_dispatch:
+
+jobs:
+  # Software Composition Analysis over pubspec.lock.
+  osv-weekly:
+    if: github.event.schedule != '0 20 1 * *'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
+    with:
+      fail-on-vuln: true
+      # See ci.yaml: keeps the gate independent of Code Scanning entitlement.
+      upload-sarif: false
+
+  # Full-history secret scan. With no `--log-opts` (i.e. any non-PR event) the
+  # action scans the entire history rather than a commit range.
+  gitleaks-monthly:
+    if: github.event.schedule != '0 20 * * 0'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Mandatory here: a full-history scan needs the full history.
+          fetch-depth: 0
+
+      - name: 🔐 Gitleaks
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE is only required for ORG-owned repositories.
