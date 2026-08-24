@@ -16,3 +16,37 @@ linter:
     # Widgetbook is the reference surface for this package; it is consumed
     # in-repo and never published, so pub-style API docs are not required.
     public_member_api_docs: false
+
+dart_code_linter:
+  metrics:
+    cyclomatic-complexity: 20
+    number-of-parameters: 8
+    maximum-nesting-level: 5
+  metrics-exclude:
+    - test/**
+    - "**/*.g.dart"
+  rules-exclude:
+    - "**/*.g.dart"
+  rules:
+    - always-remove-listener
+    - use-setstate-synchronously
+    - avoid-unnecessary-setstate
+    - avoid-returning-widgets
+    - prefer-extracting-callbacks
+    - avoid-expanded-as-spacer
+    - avoid-shrink-wrap-in-lists
+    - prefer-using-list-view
+    - avoid-border-all
+    - prefer-const-border-radius
+    - prefer-correct-edge-insets-constructor
+    # Design tokens legitimately pass the same literal to several
+    # semantic slots (onSuccess/onWarning/onInfo are all white).
+    - no-equal-arguments:
+        exclude:
+          - lib/src/theme/**
+    - no-equal-then-else
+    - avoid-missing-enum-constant-in-map
+    - avoid-passing-async-when-sync-expected
+    - avoid-redundant-async
+    - avoid-throw-in-catch-block
+    - avoid-unnecessary-type-casts

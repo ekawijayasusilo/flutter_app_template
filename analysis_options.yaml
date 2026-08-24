@@ -14,3 +14,53 @@ analyzer:
 linter:
   rules:
     public_member_api_docs: false
+
+dart_code_linter:
+  metrics:
+    cyclomatic-complexity: 20
+    number-of-parameters: 8
+    maximum-nesting-level: 5
+  metrics-exclude:
+    - test/**
+    - "**/*.g.dart"
+  rules-exclude:
+    - "**/*.g.dart"
+    - "**/l10n/gen/**"
+  rules:
+    - always-remove-listener
+    - use-setstate-synchronously
+    - avoid-unnecessary-setstate
+    - avoid-returning-widgets
+    - prefer-extracting-callbacks
+    - avoid-expanded-as-spacer
+    - avoid-shrink-wrap-in-lists
+    - prefer-using-list-view
+    - avoid-border-all
+    - prefer-const-border-radius
+    - prefer-correct-edge-insets-constructor
+    - no-equal-arguments
+    - no-equal-then-else
+    - avoid-missing-enum-constant-in-map
+    - avoid-passing-async-when-sync-expected
+    - avoid-redundant-async
+    - avoid-throw-in-catch-block
+    - avoid-unnecessary-type-casts
+    - prefer-intl-name
+    - provide-correct-intl-args
+    - prefer-provide-intl-description
+    - avoid-banned-imports:
+        severity: error
+        entries:
+          - paths: ['lib[/\\].*\.dart']
+            deny: ['package:design_system/src/.*']
+            message: >-
+              Import package:design_system/design_system.dart — the barrel export
+              is the public API; src/ is private.
+    # use-design-system-item: disabled for now. Re-enable by mapping design
+    # system widgets to the Material widgets they replace, e.g.
+    #   - use-design-system-item:
+    #       AppButton:
+    #         - instead_of: ElevatedButton
+    #           from_package: "package:flutter/src/material"
+    # NOTE: from_package is substring-matched against the DEFINING library
+    # (package:flutter/src/material/elevated_button.dart), not the barrel.

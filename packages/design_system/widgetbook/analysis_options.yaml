@@ -10,3 +10,34 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+
+dart_code_linter:
+  metrics:
+    cyclomatic-complexity: 20
+    number-of-parameters: 8
+    maximum-nesting-level: 5
+  metrics-exclude:
+    - test/**
+    - "**/*.g.dart"
+  rules-exclude:
+    - "**/*.g.dart"
+  rules:
+    - always-remove-listener
+    - use-setstate-synchronously
+    - avoid-unnecessary-setstate
+    # Omitted: widgetbook's @UseCase pattern is global functions that
+    # return a Widget. The rule is structurally incompatible here.
+    - prefer-extracting-callbacks
+    - avoid-expanded-as-spacer
+    - avoid-shrink-wrap-in-lists
+    - prefer-using-list-view
+    - avoid-border-all
+    - prefer-const-border-radius
+    - prefer-correct-edge-insets-constructor
+    - no-equal-arguments
+    - no-equal-then-else
+    - avoid-missing-enum-constant-in-map
+    - avoid-passing-async-when-sync-expected
+    - avoid-redundant-async
+    - avoid-throw-in-catch-block
+    - avoid-unnecessary-type-casts
