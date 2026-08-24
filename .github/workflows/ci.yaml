@@ -210,6 +210,34 @@ jobs:
           --class-pattern "AppLocalizations$"
           --no-fatal-unused
 
+  # Lane-discovery smoke test. `fastlane lanes` parses and instantiates the
+  # Fastfile, so import_from_git genuinely executes -- a moved, deleted or
+  # mistyped shared_scripts tag fails here instead of the first time someone
+  # tries to run a lane. The lanes themselves are developer-local; CI does not
+  # invoke them, because flutter-ci already covers format/analyze/test.
+  fastlane-lanes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: 🛬 Verify Imported Lanes
+        run: |
+          set -euo pipefail
+          bundle exec fastlane lanes 2>&1 | tee lanes.txt
+          for lane in clean_gen test analyze l10n build_apk build_aab build_ipa widgetbook; do
+            grep -q "fastlane flutter $lane" lanes.txt               || { echo "::error::imported lane missing: $lane"; exit 1; }
+          done
+          echo "all 8 shared lanes resolved"
+
   # Single fan-in gate. Branch protection requires this one check instead of
   # every job above.
   #
@@ -233,6 +261,7 @@ jobs:
       - osv-scanner-push
       - gitleaks
       - dart-code-linter
+      - fastlane-lanes
     runs-on: ubuntu-latest
     permissions:
       contents: read
