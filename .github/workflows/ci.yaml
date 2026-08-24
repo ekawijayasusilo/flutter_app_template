@@ -226,7 +226,11 @@ jobs:
       - name: 💎 Setup Ruby
         uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
-          ruby-version: "3.3"
+          # Pinned to 3.1, not a current Ruby: CFPropertyList 3.0.9 in
+          # Gemfile.lock requires ruby < 3.2. That lock is itself pinned to
+          # fastlane 2.234.0 because the local toolchain is Ruby 2.7.5. Move
+          # both when the local Ruby is upgraded -- see osv-scanner.toml.
+          ruby-version: "3.1"
           bundler-cache: true
 
       - name: 🛬 Verify Imported Lanes

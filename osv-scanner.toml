@@ -1,0 +1,33 @@
+# osv-scanner exceptions.
+#
+# This file lives at the repository root and therefore applies to the lockfiles
+# here (pubspec.lock, Gemfile.lock). Config does NOT propagate to child
+# directories.
+#
+# Keep this file as close to empty as possible. Every entry is a known
+# vulnerability that CI has been told to stop reporting, so each one needs an
+# expiry date and a reason that explains why it is acceptable *and* what would
+# let us remove it.
+
+[[IgnoredVulns]]
+id = "GHSA-48rx-c7pg-q66r"
+ignoreUntil = 2026-11-24
+reason = """
+excon 0.112.0, reached transitively through fastlane. CVSS 6.5.
+
+Not fixable at the pinned fastlane version: fastlane 2.234.0 constrains
+excon to >= 0.71.0, < 1.0.0, and the fix is excon 1.5.0. `bundle update
+excon` confirms it cannot move. fastlane 2.238.0 widens the constraint to
+< 2.0.0 and would resolve this, but it requires Ruby >= 3.0 while the
+local toolchain is Ruby 2.7.5.
+
+Scope: excon is an HTTP client used by fastlane on a developer machine or
+CI runner at build time. It is not part of the shipped application and
+handles no untrusted input in this repository -- the fastlane lanes here
+only invoke local flutter/dart commands.
+
+Removing this entry: upgrade the local toolchain to Ruby 3.x, regenerate
+Gemfile.lock at fastlane 2.238.0 or newer, then delete this block. The
+CI runner is pinned to Ruby 3.1 for the same reason (CFPropertyList 3.0.9
+in this lock requires ruby < 3.2) and should move at the same time.
+"""
