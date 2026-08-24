@@ -13,6 +13,7 @@ environment:
 dependencies:
   bloc: ^9.2.1
   design_system: ^0.1.0
+  firebase_core: ^4.13.0
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
