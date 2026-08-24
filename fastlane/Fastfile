@@ -1,0 +1,14 @@
+# Shared lanes live in ekawijayasusilo/shared_scripts.
+#
+# `branch:` takes an exact tag and gives a byte-exact pin -- import_from_git
+# clones with --branch, and a tag name clones detached at that tag. The
+# alternative, `version:`, is a Gem::Requirement matched against tag names and
+# would drift onto later releases.
+#
+# Only the Fastfile at `path` and a sibling actions/ directory are checked out,
+# so importing the flutter lanes never drags in the android ones.
+import_from_git(
+  url: "https://github.com/ekawijayasusilo/shared_scripts.git",
+  branch: "v1.1.1",
+  path: "fastlane/flutter/Fastfile"
+)
