@@ -22,4 +22,10 @@ jobs:
   license_check:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/license_check.yml@v1
     with:
+      # Without this the upstream workflow detects is_flutter: false and runs
+      # `dart pub get`, which cannot resolve a project that needs the Flutter SDK.
+      flutter_version: "3.47.1"
       allowed: "MIT,BSD-3-Clause,BSD-2-Clause,Apache-2.0"
+      # pubspec_lock_parse (transitive via bloc_lint) is Apache-2.0, but ships
+      # no LICENSE file so pub.dev reports its license as unknown.
+      skip_packages: "pubspec_lock_parse"
