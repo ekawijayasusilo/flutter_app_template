@@ -1,0 +1,78 @@
+# Codecov is the authoritative coverage gate, not `very_good test --min-coverage`.
+# The workflow's local minimum is left at 0 on purpose: only Codecov can express
+# PATCH coverage (coverage of the lines a PR actually touched) separately from
+# project coverage.
+#
+# Flag names are NOT arbitrary. shared_workflow's flutter-ci reusable workflow
+# derives one flag per package from that package's `name:` in pubspec.yaml, so
+# they must match exactly. widgetbook_catalog has no tests, therefore no
+# coverage report and no flag.
+#
+# Validate changes with:
+#   curl -X POST --data-binary @codecov.yml https://codecov.io/validate
+
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  status:
+    project:
+      default:
+        target: 75%
+        threshold: 1%
+      flutter_app_template:
+        target: 75%
+        threshold: 1%
+        flags:
+          - flutter_app_template
+        # `pass`, not `exclude`: these are required status checks, and an
+        # excluded status is never posted at all, which would leave the PR
+        # waiting on it forever.
+        flag_coverage_not_uploaded_behavior: pass
+      design_system:
+        target: 75%
+        threshold: 1%
+        flags:
+          - design_system
+        flag_coverage_not_uploaded_behavior: pass
+    patch:
+      default:
+        target: 75%
+        threshold: 0%
+      flutter_app_template:
+        target: 75%
+        flags:
+          - flutter_app_template
+        flag_coverage_not_uploaded_behavior: pass
+      design_system:
+        target: 75%
+        flags:
+          - design_system
+        flag_coverage_not_uploaded_behavior: pass
+
+# carryforward keeps a flag's last known coverage when a run uploads no report
+# for it; without it those files would report 0%. Each carryforward flag must
+# declare `paths`.
+flags:
+  flutter_app_template:
+    paths:
+      - lib/
+    carryforward: true
+  design_system:
+    paths:
+      - packages/design_system/lib/
+    carryforward: true
+
+comment:
+  layout: "header, diff, flags, components, files, footer"
+  behavior: default
+  require_changes: false
+  show_carryforward_flags: true
+
+ignore:
+  - "**/*.g.dart"
+  - "**/l10n/gen/**"
+  - "packages/design_system/widgetbook/**"

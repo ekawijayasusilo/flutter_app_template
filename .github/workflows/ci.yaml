@@ -1,0 +1,249 @@
+name: ci
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Every blocking check lives in this one workflow on purpose. `needs:` cannot
+# reference a job in another workflow file, so a fan-in gate is only possible
+# within a single file. There is deliberately no `on.pull_request.paths` filter
+# either: GitHub leaves a required check that was skipped by path filtering in a
+# permanent "Pending" state, which would block every PR that does not touch
+# those paths. Path filtering is done per job, via the `changes` job below.
+on:
+  pull_request:
+    branches: [main]
+    # `edited` matters: the semantic PR check must re-run when a title is fixed.
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+
+jobs:
+  changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deps: ${{ steps.filter.outputs.deps }}
+    steps:
+      - name: 🔍 Detect Dependency Changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            deps:
+              - 'pubspec.yaml'
+              - 'pubspec.lock'
+              - 'packages/**/pubspec.yaml'
+              - '.github/workflows/ci.yaml'
+
+  semantic-pull-request:
+    if: github.event_name == 'pull_request'
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/semantic-pull-request.reusable.yml@v1.2.0
+
+  flutter:
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/flutter-ci.reusable.yml@v1.2.0
+    with:
+      # Exact, so the renovate/flutter customManager regex matches it.
+      flutter_version: "3.47.1"
+      # Without this only the root package's tests run. design_system's 65 tests
+      # were silently never executed in CI.
+      test_recursion: true
+      # Neither `flutter analyze` nor `dart format` walks a pub workspace, so
+      # every member is listed explicitly.
+      analyze_directories: >-
+        lib
+        test
+        packages/design_system/lib
+        packages/design_system/test
+        packages/design_system/widgetbook/lib
+      format_directories: >-
+        lib
+        test
+        packages/design_system/lib
+        packages/design_system/test
+        packages/design_system/widgetbook/lib
+      # min_coverage is left at the reusable workflow's default of 0 on purpose:
+      # codecov.yml owns coverage policy, because only Codecov can express patch
+      # coverage separately from project coverage.
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  license-check:
+    needs: changes
+    # `!cancelled()` so a push, where `changes` is skipped, still evaluates this
+    # condition instead of inheriting the skip.
+    if: >-
+      !cancelled() &&
+      (github.event_name != 'pull_request' || needs.changes.outputs.deps == 'true')
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/pub-license-check.reusable.yml@v1.2.0
+    with:
+      # Required: without it the upstream workflow detects is_flutter: false and
+      # runs `dart pub get`, which cannot resolve a Flutter project.
+      flutter_version: "3.47.1"
+      allowed: "MIT,BSD-3-Clause,BSD-2-Clause,Apache-2.0"
+      # pubspec_lock_parse (transitive via bloc_lint) is Apache-2.0, but ships
+      # no LICENSE file so pub.dev reports its license as unknown.
+      skip_packages: "pubspec_lock_parse"
+
+  spell-check:
+    # shared_workflow has no spell-check equivalent, so this stays on Very Good
+    # Workflows -- but pinned to the exact revision shared_workflow forked from,
+    # rather than a floating @v1.
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/spell_check.yml@f053008378cc15a643a9050e67b0417bc548e7e8
+    with:
+      includes: |
+        **/*.md
+      modified_files_only: false
+
+  # Software Composition Analysis. `upload-sarif: false` keeps the gate
+  # independent of Code Scanning entitlement: the upstream SARIF upload step has
+  # no continue-on-error, so on a repository without Code Security it returns 403
+  # and fails the job. The SARIF is still kept as a workflow artifact.
+  osv-scanner-pr:
+    if: github.event_name == 'pull_request'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
+    with:
+      fail-on-vuln: true
+      upload-sarif: false
+
+  osv-scanner-push:
+    if: github.event_name == 'push'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
+    with:
+      fail-on-vuln: true
+      upload-sarif: false
+
+  # Secret scanning. Incremental on PRs -- the action scans only the PR's commit
+  # range. The full-history sweep runs monthly in security_scheduled.yaml.
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # For inline PR comments. NOT security-events: the action only uploads its
+      # SARIF as a build artifact, never to Code Scanning.
+      pull-requests: write
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The PR scan range is baseRef^..headRef, so the base commit's parent
+          # must exist locally.
+          fetch-depth: 0
+
+      - name: 🔐 Gitleaks
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE is only required for ORG-owned repositories.
+          # Personal-account repositories need no key.
+
+  # dart_code_linter is CLI-only -- bloc_lint already occupies the analyzer
+  # plugin slot via custom_lint -- and has no recursive mode, so it runs once per
+  # package.
+  dart-code-linter:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - "."
+          - "packages/design_system"
+          - "packages/design_system/widgetbook"
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: "3.47.1"
+          channel: stable
+          cache: true
+
+      - name: 📦 Install Dependencies
+        # One resolve at the workspace root covers every member.
+        run: flutter pub get
+
+      - name: 🕵️ Analyze
+        working-directory: ${{ matrix.package }}
+        # --fatal-style and --fatal-performance default to OFF, and metric
+        # thresholds never affect the exit code without
+        # --set-exit-on-violation-level. Without these three flags a large share
+        # of the configured rules would report but never fail.
+        run: >-
+          dart run dart_code_linter:metrics analyze lib
+          --reporter=github
+          --fatal-style
+          --fatal-performance
+          --set-exit-on-violation-level=warning
+
+      - name: 🧹 Check Unused Code
+        working-directory: ${{ matrix.package }}
+        # The check-unused-* commands support console/codeclimate/json/gitlab
+        # only -- passing --reporter=github to them fails.
+        run: dart run dart_code_linter:metrics check-unused-code lib
+
+      - name: 🧹 Check Unused Files
+        working-directory: ${{ matrix.package }}
+        run: dart run dart_code_linter:metrics check-unused-files lib
+
+      - name: 🌐 Check Unused l10n
+        if: matrix.package == '.'
+        # Advisory only. Flutter's generated AppLocalizations always reports
+        # `localeName` and `delegate` as unused; they are fixtures of every
+        # gen-l10n output, so a fatal run could never pass.
+        run: >-
+          dart run dart_code_linter:metrics check-unused-l10n lib
+          --class-pattern "AppLocalizations$"
+          --no-fatal-unused
+
+  # Single fan-in gate. Branch protection requires this one check instead of
+  # every job above.
+  #
+  # `if: always()` is mandatory. Without it, a failing dependency makes this job
+  # SKIPPED, and GitHub reports a skipped job as "Success" -- a required check
+  # that silently passes while the build is broken.
+  #
+  # `skipped` is tolerated deliberately: license-check is path-gated, and
+  # semantic-pull-request / osv-scanner-{pr,push} are event-gated. A job skipped
+  # because an upstream failed cannot slip through, because that upstream itself
+  # reports `failure`.
+  ci-status:
+    if: always()
+    needs:
+      - changes
+      - semantic-pull-request
+      - flutter
+      - license-check
+      - spell-check
+      - osv-scanner-pr
+      - osv-scanner-push
+      - gitleaks
+      - dart-code-linter
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: ✅ Verify No Required Job Failed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "dependency results: $RESULTS"
+          if [[ "$RESULTS" == *failure* || "$RESULTS" == *cancelled* ]]; then
+            echo "::error::a required job did not succeed"
+            exit 1
+          fi
+          echo "all required jobs succeeded or were legitimately skipped"

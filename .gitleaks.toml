@@ -1,0 +1,28 @@
+title = "flutter_app_template gitleaks configuration"
+
+# `useDefault` pulls in the full upstream ruleset. Note that `useDefault` and
+# `path` are mutually exclusive under [extend].
+[extend]
+useDefault = true
+
+# ---------------------------------------------------------------------------
+# Firebase allowlist -- PRESENT BUT COMMENTED OUT ON PURPOSE.
+#
+# Firebase is not wired into this template yet. The moment it is, these files
+# will trip the default ruleset. The keys they contain are public by design:
+# they identify a project, they do not authorise access. Security for a Firebase
+# app lives in Security Rules and App Check, not in hiding these values -- they
+# ship inside every distributed binary regardless.
+#
+# Uncomment this block when Firebase lands, rather than disabling rules
+# wholesale or adding a blanket allowlist.
+#
+# [[allowlists]]
+# description = "Firebase client configuration -- public by design, not a secret"
+# paths = [
+#   '''android/app/google-services\.json''',
+#   '''ios/Runner/GoogleService-Info\.plist''',
+#   '''macos/Runner/GoogleService-Info\.plist''',
+#   '''lib/firebase_options\.dart''',
+# ]
+# ---------------------------------------------------------------------------
