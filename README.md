@@ -127,6 +127,11 @@ Renovate runs daily, centrally, from `shared_workflow`. Nothing is scheduled her
 `ocr-review` and `opencode-simplify` review pull requests and post comments. `opencode` responds to
 `/oc` or `/opencode` in a comment. All three are LLM-driven and must never be required checks.
 
+`opencode` additionally requires the commenter to be the repository **owner or a collaborator**.
+Without that check any GitHub user could drive an agent holding `contents: write` and the API key,
+because `issue_comment` runs on the default branch with full secrets. The Actions setting that
+requires approval for fork pull request workflows does not cover this — it gates fork PR runs only.
+
 ### Why one workflow file, and why the gate looks like that
 
 `needs:` cannot reference a job in another workflow file, so a fan-in gate is only possible within a
