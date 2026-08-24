@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Consumer-side Renovate configuration. All policy lives in shared_workflow's modular presets, composed here at one exact tag -- there is deliberately no floating major.",
+    "No runner workflow is needed in this repository: shared_workflow runs Renovate centrally with autodiscover, and processes only repositories that commit a Renovate configuration.",
+    "base and github-actions are listed explicitly for readability; flutter already extends dart, which extends allowlist.",
+    "gradle is in scope because android/*.gradle.kts and android/gradle/wrapper/gradle-wrapper.properties exist. CocoaPods is not: Flutter generates the Podfile at first iOS build."
+  ],
+  "extends": [
+    "github>ekawijayasusilo/shared_workflow//renovate/base#v1.2.0",
+    "github>ekawijayasusilo/shared_workflow//renovate/github-actions#v1.2.0",
+    "github>ekawijayasusilo/shared_workflow//renovate/dart#v1.2.0",
+    "github>ekawijayasusilo/shared_workflow//renovate/flutter#v1.2.0",
+    "github>ekawijayasusilo/shared_workflow//renovate/gradle#v1.2.0"
+  ]
+}
