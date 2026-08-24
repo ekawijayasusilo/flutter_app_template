@@ -28,6 +28,21 @@
     "lerp",
     "xxlg",
     "widgetbook",
-    "Widgetbook"
+    "Widgetbook",
+    "autodiscover",
+    "carryforward",
+    "codecov",
+    "excon",
+    "Fastfile",
+    "fastlane",
+    "gitleaks",
+    "junitreport",
+    "opencode",
+    "osv",
+    "renovate",
+    "SARIF",
+    "Semgrep",
+    "subosito",
+    "xcarchive"
   ]
 }
