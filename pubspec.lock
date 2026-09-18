@@ -141,10 +141,10 @@ packages:
     dependency: transitive
     description:
       name: build_runner
-      sha256: "90363d438bd9f84a4d5bbb83352251f57d2d9d771bc95a44e6a33fe25fa52774"
+      sha256: "894c243f6bc32015fec466ce30a6925bd537a77a426ee5bf481120477eb3de67"
       url: "https://pub.dev"
     source: hosted
-    version: "2.16.0"
+    version: "2.16.1"
   built_collection:
     dependency: transitive
     description:
@@ -245,10 +245,10 @@ packages:
     dependency: "direct dev"
     description:
       name: dart_code_linter
-      sha256: "8b9574e550ea20e18c1c990e4302590aedb868a7262ec2fee355eeffc912b8ba"
+      sha256: "030d52e4d73b2429ec50671725899f29fc3de34f6c365c1fe8a8c1a36052af46"
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.1"
+    version: "4.4.0"
   dart_style:
     dependency: transitive
     description:
